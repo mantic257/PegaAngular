@@ -75,6 +75,8 @@ import { RecentlistComponent } from './_subcomponents/recentlist/recentlist.comp
 import { NumberComponent } from './_fieldcomponents/number/number.component';
 import { NosupportComponent } from './_fieldcomponents/nosupport/nosupport.component';
 import { ReferenceHelper } from  './_helpers/reference-helper';
+import { CaselistpanelComponent } from './caselistpanel/caselistpanel.component';
+import { CaselistComponent } from './caselist/caselist.component';
 
 
 
@@ -120,7 +122,9 @@ import { ReferenceHelper } from  './_helpers/reference-helper';
     NumberComponent,
     NosupportComponent,
     SettingsdialogComponent,
-    LocalactiondialogComponent
+    LocalactiondialogComponent,
+    CaselistpanelComponent,
+    CaselistComponent
   ],
 
   imports: [

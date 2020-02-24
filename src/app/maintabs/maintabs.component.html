@@ -7,6 +7,7 @@
     <div class="center">
     <!-- <h1 *ngIf="tab === 'Dashboard'">{{tab}}</h1> -->
     <app-worklistpanel *ngIf="tab === 'Dashboard'"></app-worklistpanel>
+    <app-caselistpanel *ngIf="tab === 'Dashboard'"></app-caselistpanel>
     <app-workitem *ngIf="tab != 'Dashboard'"></app-workitem>
     </div>
   </mat-tab>
