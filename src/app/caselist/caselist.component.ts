@@ -7,6 +7,7 @@ import { OpenAssignmentService } from '../_messages/openassignment.service';
 import { RefreshWorkListService } from '../_messages/refreshworklist.service';
 import { ProgressSpinnerService } from "../_messages/progressspinner.service";
 import { CaseService } from '../_services/case.service';
+import { OpenReviewCaseService } from '../_messages/open-review-case.service';
 
 
 
@@ -31,8 +32,9 @@ export class CaselistComponent implements OnInit {
 
 
   constructor(
-    private caseService: CaseService
-
+    private caseService: CaseService,
+    private psservice: ProgressSpinnerService,
+    private openreviewcaseservice: OpenReviewCaseService
   ) { }
 
   ngOnInit() {
@@ -73,5 +75,15 @@ export class CaselistComponent implements OnInit {
 
   ngOnDestroy() {
     this.subscription.unsubscribe();
+  }
+
+  openCase(row) {
+
+    console.log("Row", row);
+
+    this.psservice.sendMessage(true);
+    this.openreviewcaseservice.sendMessage(row.name, row.ID);
+    console.log("OpenCase Finished", row);
+
   }
 }

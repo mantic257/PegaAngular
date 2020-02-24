@@ -22,6 +22,8 @@ import { ToppageComponent } from '../_subcomponents/toppage/toppage.component';
 import { RenameTabService } from '../_messages/renametab.service';
 import { OpenAssignmentService } from '../_messages/openassignment.service';
 import { GetRecentService } from '../_messages/getrecent.service';
+import { ReviewCaseService } from "../_messages/review-case-service.service";
+
 import { GetCaseService } from '../_messages/getcase.service';
 import { ProgressSpinnerService } from '../_messages/progressspinner.service';
 import { PageInstructionsService } from '../_messages/pageinstructions.service';
@@ -52,7 +54,7 @@ export class WorkitemComponent implements OnInit {
 
   message: any;
   subscription: Subscription;
-  
+
   changeMessage: any;
   changeSubscription: Subscription;
 
@@ -70,6 +72,9 @@ export class WorkitemComponent implements OnInit {
 
   getRecentMessage: any;
   getRecentSubscription: Subscription;
+
+  reviewCaseMessage: any;
+  reviewCaseSubscription: Subscription;
 
   getStateMessage: any;
   getStateSubscription: Subscription;
@@ -129,13 +134,13 @@ export class WorkitemComponent implements OnInit {
 
   bUseRepeatPageInstructions: boolean = false;
   bUsePagePageInstructions: boolean = false;
- 
+
 
 
   constructor(private aservice: AssignmentService,
     private cservice: CaseService,
-    private gaservice: GetAssignmentService, 
-    private cdref: ChangeDetectorRef, 
+    private gaservice: GetAssignmentService,
+    private cdref: ChangeDetectorRef,
     private gvservice: GetViewService,
     private gpservice: GetPageService,
     private gchservice: GetChangesService,
@@ -150,14 +155,15 @@ export class WorkitemComponent implements OnInit {
     private rtservice: RenameTabService,
     private oaservice: OpenAssignmentService,
     private grservice: GetRecentService,
+    private reviewcaseservice: ReviewCaseService,
     private gcservice: GetCaseService,
     private piservice: PageInstructionsService,
     private pageinstructions: PageInstructions,
-    private localActionDialog: MatDialog, 
+    private localActionDialog: MatDialog,
     private fb: FormBuilder,
     private psservice: ProgressSpinnerService) {
 
-    this.subscription = this.gaservice.getMessage().subscribe(message => { 
+    this.subscription = this.gaservice.getMessage().subscribe(message => {
       this.message = message;
       this.currentCaseName = this.message.caseID;
 
@@ -166,25 +172,25 @@ export class WorkitemComponent implements OnInit {
       this.handleUnsubscribe();
     });
 
-    this.changeSubscription = this.gchservice.getMessage().subscribe(message => { 
+    this.changeSubscription = this.gchservice.getMessage().subscribe(message => {
       this.changeMessage = message;
 
       this.updateState(this.changeMessage.ref, this.changeMessage.value, this.changeMessage.caseID, this.changeMessage.refType);
     });
 
-    this.actionSubscription = this.gactionsservice.getMessage().subscribe(message => { 
+    this.actionSubscription = this.gactionsservice.getMessage().subscribe(message => {
       this.actionMessage = message;
 
       this.handleThisFormActions(this.actionMessage.actionName, this.actionMessage.action, this.actionMessage.caseID, this.actionMessage.reference);
     });
 
-    this.refreshAssignmentSubscription = this.raservice.getMessage().subscribe(message => { 
+    this.refreshAssignmentSubscription = this.raservice.getMessage().subscribe(message => {
       this.refreshAssignmentMessage = message;
 
       this.handleRefreshAssignmentActions(this.refreshAssignmentMessage.action, this.refreshAssignmentMessage.data);
     });
 
-    this.getNewCaseSubscription = this.gncservice.getMessage().subscribe(message => { 
+    this.getNewCaseSubscription = this.gncservice.getMessage().subscribe(message => {
 
       this.getNewCaseMessage = message;
 
@@ -192,7 +198,7 @@ export class WorkitemComponent implements OnInit {
 
       this.handleUnsubscribe();
     });
-    
+
     this.getRecentSubscription = this.grservice.getMessage().subscribe(
       message => {
         this.getRecentMessage = message;
@@ -203,9 +209,20 @@ export class WorkitemComponent implements OnInit {
 
       }
     );
+    this.reviewCaseSubscription = this.reviewcaseservice.getMessage().subscribe(
+      message => {
+        this.reviewCaseMessage = message;
+
+        this.reviewCase(message.caseID);
+
+        this.handleUnsubscribe();
+
+      }
+    );
+
 
     this.pageInstructionsSubscription = this.piservice.getMessage().subscribe(
-      message => { 
+      message => {
         this.pageInstructionsMessage = message;
 
         this.handlePageInstructions(message.caseID, message.refType, message.instructions, message.target, message.index, message.content);
@@ -225,9 +242,10 @@ export class WorkitemComponent implements OnInit {
     this.changeSubscription.unsubscribe();
     this.getNewCaseSubscription.unsubscribe();
     this.getRecentSubscription.unsubscribe();
+    this.reviewCaseSubscription.unsubscribe();
     this.actionSubscription.unsubscribe();
     this.pageInstructionsSubscription.unsubscribe();
-    
+
   }
 
 
@@ -241,6 +259,7 @@ export class WorkitemComponent implements OnInit {
     this.subscription .unsubscribe();
     this.getNewCaseSubscription.unsubscribe();
     this.getRecentSubscription.unsubscribe();
+    this.reviewCaseSubscription.unsubscribe();
 
   }
 
@@ -249,7 +268,7 @@ export class WorkitemComponent implements OnInit {
     if (caseID === this.currentCaseID$) {
 
       switch(sAction){
-        case "addRow": 
+        case "addRow":
           // send an add row event, so grids/repeats will add a row
           break;
         case "deleteRow":
@@ -261,7 +280,7 @@ export class WorkitemComponent implements OnInit {
             }
             this.restoreState();
             break;
-        case "refresh": 
+        case "refresh":
           if (oAction.action == "localAction") {
             this.bIsLocalAction = false;
           }
@@ -280,7 +299,7 @@ export class WorkitemComponent implements OnInit {
           }
 
           break;
-        case "takeAction": 
+        case "takeAction":
           this.takeAction(oAction.actionProcess.actionName);
           break;
         case "setValue":
@@ -290,10 +309,10 @@ export class WorkitemComponent implements OnInit {
           this.openUrlInWindow(oAction.actionProcess);
           break;
         case "localAction" :
-          this.localAction(oAction.actionProcess.localAction, 
+          this.localAction(oAction.actionProcess.localAction,
             oAction.actionProcess.target, oAction.actionProcess.customTemplate);
             break;
-        default: 
+        default:
           console.log("unhandled action:" + sAction);
           break;
       }
@@ -355,7 +374,7 @@ export class WorkitemComponent implements OnInit {
         let targetRemove = this.refHelper.getRepeatFromReference(oAction.layoutData.reference, oAction.layoutData.referenceType, postContentRemove);
 
         if (oAction.layoutData.referenceType === 'List') {
-          
+
 
           if (targetRemove.length > 1) {
             targetRemove.pop();
@@ -389,7 +408,7 @@ export class WorkitemComponent implements OnInit {
 
 
   handlePageInstructions(sCaseID: string, sRefType: string, sInstructions: string, sTarget: string, sIndex: string, oContent: object) {
-    if (sCaseID == this.currentCaseID$) {  
+    if (sCaseID == this.currentCaseID$) {
       if (sRefType == "List") {
         let nIndex = parseInt(sIndex);
 
@@ -398,7 +417,7 @@ export class WorkitemComponent implements OnInit {
       else {
         this.pageinstructions.addAGroupInstruction(sInstructions, sTarget, sIndex, oContent);
       }
-    } 
+    }
   }
 
 
@@ -434,7 +453,7 @@ export class WorkitemComponent implements OnInit {
       }
     }
   }
-  
+
   openUrlInWindow(oData) {
 
     // remove quotes,
@@ -448,7 +467,7 @@ export class WorkitemComponent implements OnInit {
         url = oAlternateDomain.url;
         if (url.indexOf('"') == 0) {
           url = url.replace(/\"/gi, "");
-        }  
+        }
       }
       else if (oAlternateDomain.urlReference != undefined) {
         url = this.determineParamRef(oAlternateDomain.urlReference);
@@ -498,7 +517,7 @@ export class WorkitemComponent implements OnInit {
         }
         if (sVal.indexOf('"') == 0) {
           sVal = sVal.replace(/\"/gi, "");
-        }  
+        }
 
         sReturn += sVal;
       }
@@ -563,7 +582,7 @@ export class WorkitemComponent implements OnInit {
   }
 
   determineParamRef(paramRef: any) {
-    let paramValue = this.lookUpParam(paramRef.reference, true); 
+    let paramValue = this.lookUpParam(paramRef.reference, true);
 
     if (paramValue === undefined) {
       paramValue = this.refHelper.htmlDecode(paramRef.lastSavedValue);
@@ -611,7 +630,7 @@ export class WorkitemComponent implements OnInit {
           else {
             returnString = currNode[nodeEl];
           }
-  
+
         }
       }
 
@@ -632,7 +651,7 @@ export class WorkitemComponent implements OnInit {
     this.aservice.getAssignment(assignmentID).subscribe(
       assignmentResponse => {
         this.currentAssignment$ = assignmentResponse.body;
-        
+
         let nextAssignment : any = this.currentAssignment$;
 
         if (nextAssignment.actions.length > 0) {
@@ -640,7 +659,7 @@ export class WorkitemComponent implements OnInit {
           let nextAction = nextAssignment.actions[0].ID;
 
           this.currentCaseID$ = nextAssignment.caseID;
-          
+
           let arCase = nextAssignment.caseID.split(" ");
 
           this.getNextAssignment(nextAssignment.ID, nextAction, nextAssignment.caseID);
@@ -654,7 +673,7 @@ export class WorkitemComponent implements OnInit {
             if (arCase.length > 1) {
               caseName = arCase[1];
               this.currentCaseName = caseName;
-            }            
+            }
           }
           catch {
           }
@@ -681,7 +700,7 @@ export class WorkitemComponent implements OnInit {
 
     // go get the assignment
     this.aservice.getFieldsForAssignment(assignmentID, action).subscribe(
-      response => { 
+      response => {
         this.currentAssignmentFields$ = response.body;
         this.aheaders = response.headers;
         this.currentAction = action;
@@ -720,10 +739,10 @@ export class WorkitemComponent implements OnInit {
             //let timer = interval(100).subscribe(() => {
             //  this.gcservice.sendMessage(this.currentCase$);timer.unsubscribe();
             //  });
-            
+
 
             this.cdref.detectChanges();
-            
+
           },
           err => {
             let snackBarRef = this.snackBar.open("Errors from case:" + err.message, "Ok");
@@ -737,7 +756,7 @@ export class WorkitemComponent implements OnInit {
       },
       err => {
         let snackBarRef = this.snackBar.open("Errors from assignment:" + err.message, "Ok");
-        
+
       }
 
     )
@@ -754,7 +773,7 @@ export class WorkitemComponent implements OnInit {
 
     // go get the assignment
     this.aservice.getFieldsForAssignment(assignmentID, action).subscribe(
-      response => { 
+      response => {
         this.currentAssignmentFieldsDialog$ = response.body;
         this.aheadersDialog = response.headers;
         this.currentActionDialog = action;
@@ -778,7 +797,7 @@ export class WorkitemComponent implements OnInit {
       },
       err => {
         let snackBarRef = this.snackBar.open("Errors from assignment:" + err.message, "Ok");
-        
+
       }
 
     )
@@ -793,7 +812,7 @@ export class WorkitemComponent implements OnInit {
     // go get the case (needed for etag)
     this.cservice.getCase(caseID).subscribe(
       response => {
-        
+
         this.currentCase$ = response.body;
         this.cheaders = response.headers;
         this.currentCaseLoaded$ = true;
@@ -808,11 +827,11 @@ export class WorkitemComponent implements OnInit {
 
 
         this.gcservice.sendMessage(this.currentCase$);
-        
+
       },
       err => {
         let snackBarRef = this.snackBar.open("Errors from case:" + err.message, "Ok");
-      }  
+      }
     );
   }
 
@@ -842,10 +861,10 @@ export class WorkitemComponent implements OnInit {
         //this.etag = response.headers.get("etag").replace(/\"/gi, '');
 
         this.cdref.detectChanges();
-        
+
         //this.getCase(this.currentCaseID$);
         this.getPage(this.currentPage$);
-       
+
 
       },
       err => {
@@ -930,13 +949,13 @@ export class WorkitemComponent implements OnInit {
           let assignmentID = firstAssignment.ID;
           let firstAction = firstAssignment["actions"][0];
           let actionID = firstAction.ID;
-  
+
           this.getNextAssignment(assignmentID, actionID, caseID);
         }
         else {
 
           this.currentCaseID$ = this.currentCase$["ID"];
-    
+
           this.currentPageID$ = "Review";
 
           this.psservice.sendMessage(false);
@@ -944,14 +963,14 @@ export class WorkitemComponent implements OnInit {
           this.isPage = true;
           this.isView = false;
           this.isNewPage = false;
-          this.cdref.detectChanges();          
+          this.cdref.detectChanges();
 
 
-         
+
         }
 
 
-        
+
       },
       err => {
         let snackBarRef = this.snackBar.open("Errors from case:" + err.message, "Ok");
@@ -961,9 +980,36 @@ export class WorkitemComponent implements OnInit {
   }
 
 
+  reviewCase(caseID: string) {
+    console.log("Review Case: ", caseID);
+    this.cservice.getCase(caseID).subscribe(
+      response => {
+
+        this.currentCase$ = response.body;
+
+
+          this.currentCaseID$ = this.currentCase$["ID"];
+
+          this.currentPageID$ = "Review";
+
+          this.psservice.sendMessage(false);
+          this.isLoaded = true;
+          this.isPage = true;
+          this.isView = false;
+          this.isNewPage = false;
+          this.cdref.detectChanges();
+
+      },
+      err => {
+        let snackBarRef = this.snackBar.open("Errors from case:" + err.message, "Ok");
+      }
+
+    );
+  }
+
   getTargetAndIndex(sReference: string): object {
     let oReturn = new Object();
-    
+
     if(sReference.lastIndexOf("(") > 0) {
       let nLastDot = sReference.lastIndexOf(".");
       oReturn["propRef"] = sReference.substring(nLastDot + 1);
@@ -980,7 +1026,7 @@ export class WorkitemComponent implements OnInit {
     }
     else {
       oReturn["target"] = sReference;
-      oReturn["index"] = null; 
+      oReturn["index"] = null;
     }
 
     return oReturn;
@@ -1010,16 +1056,16 @@ export class WorkitemComponent implements OnInit {
 
       if (this.bUseRepeatPageInstructions) {
 
-        if (sRefType != null && 
+        if (sRefType != null &&
            (sRefType == "List") || (sRefType == "Group")) {
 
             // ignore ALL, because APPEND and INSERT are taken care of in repeating grid
             if (sRef != "ALL") {
               this.updatePageInstructionState(sRef, sValue, sCaseID, sRefType);
             }
-             
+
             bUpdatedPI = true;
-        } 
+        }
         else if (sRef.indexOf("(") >= 0) {
           // is a page list/group
           this.updatePageInstructionState(sRef, sValue, sCaseID, sRefType);
@@ -1035,17 +1081,17 @@ export class WorkitemComponent implements OnInit {
           }
 
       }
- 
+
       // if update page instructions, don't update regular state
       if (!bUpdatedPI) {
         if (sRef === "ALL") {
           // force to get all the fields from the display
-          // typically, when a row is added or deleted, right now, need all 
+          // typically, when a row is added or deleted, right now, need all
           // from grid, later, might change and just queue changes
           this.state = this.refHelper.getInitialValuesFromView(this.currentView$, this.bUseRepeatPageInstructions, this.bUsePagePageInstructions);
         }
         else {
-          this.state[sRef] = sValue;      
+          this.state[sRef] = sValue;
         }
       }
 
@@ -1062,7 +1108,7 @@ export class WorkitemComponent implements OnInit {
 
   updatePageInstructionState(sRef: string, sValue: string, sCaseID: string, sRefType: string) {
 
-    
+
     let oTargetInfo = this.getTargetAndIndex(sRef);
     let bHasLast = false;
 
@@ -1100,7 +1146,7 @@ export class WorkitemComponent implements OnInit {
       }
 
     }
-  
+
   }
 
   updateAssignmentView(sRef: string, sValue: string) {
@@ -1118,7 +1164,7 @@ export class WorkitemComponent implements OnInit {
 
 
   refreshView(stateData: any, oAction: any) {
-  
+
     let sRefreshFor = "";
     if (stateData == null) {
       stateData = {};
@@ -1137,8 +1183,8 @@ export class WorkitemComponent implements OnInit {
     }
 
     this.psservice.sendMessage(true);
-  
-    this.aservice.performRefreshOnAssignment(this.currentAssignmentID, this.currentAction, 
+
+    this.aservice.performRefreshOnAssignment(this.currentAssignmentID, this.currentAction,
       sRefreshFor, stateData, this.pageinstructions.getPageInstructions()).subscribe(
       response => {
         this.bRefreshOccurred = true;
@@ -1202,7 +1248,7 @@ export class WorkitemComponent implements OnInit {
 
       return;
     }
-    
+
     // submit the form if it passes and is valid
     if (this.tvComp.formValid()) {
 
@@ -1223,13 +1269,13 @@ export class WorkitemComponent implements OnInit {
             this.getAssignment(action.nextAssignmentID);
 
             this.rcservice.sendMessage(this.currentCaseID$);
-  
+
           }
           else if (action && action.nextPageID) {
-          
+
             // have a page (Confirm/Review)
             this.currentPageID$ = action.nextPageID;
-  
+
             this.psservice.sendMessage(false);
             this.isPage = true;
             this.isView = false;
@@ -1241,13 +1287,13 @@ export class WorkitemComponent implements OnInit {
             this.getCase(this.currentCaseID$);
 
             this.rcservice.sendMessage(this.currentCaseID$);
-  
+
           }
           else {
             this.psservice.sendMessage(false);
             alert("something else:" + JSON.stringify(action));
           }
-  
+
         },
         err => {
           this.psservice.sendMessage(false);
@@ -1255,7 +1301,7 @@ export class WorkitemComponent implements OnInit {
           this.handleErrors(err);
         }
       );
-  
+
       this.subscription.unsubscribe();
 
     }
@@ -1264,7 +1310,7 @@ export class WorkitemComponent implements OnInit {
   }
 
   saveView() {
-    
+
     // submit the form if it passes and is valid
     if (this.tvComp.formValid()) {
 
@@ -1276,7 +1322,7 @@ export class WorkitemComponent implements OnInit {
             case 200 :
             case 204 :
               this.pageinstructions.clearPageInstructions();
-              // good, so reload 
+              // good, so reload
               this.getAssignment(this.currentAssignmentID);
               this.bRefreshOccurred = false;
 
@@ -1292,7 +1338,7 @@ export class WorkitemComponent implements OnInit {
           this.handleErrors(err);
         }
       );
-    
+
     }
   }
 
@@ -1300,7 +1346,7 @@ export class WorkitemComponent implements OnInit {
     if (this.tpComp.formValid()) {
 
       this.psservice.sendMessage(true);
-      
+
       this.cservice.createCase(this.currentCaseID$, this.state).subscribe(
         response => {
 
@@ -1389,7 +1435,7 @@ export class WorkitemComponent implements OnInit {
     else {
       let generalSnackBarRef = this.snackBar.open(errorResponse.message, "Ok");
     }
-    
+
   }
 
 
@@ -1404,9 +1450,9 @@ export class WorkitemComponent implements OnInit {
         if (ref.indexOf(".") == 0) {
           ref = ref.substring(1);
         }
-        
+
         let controlName = this.refHelper.getControlNameFromReference(ref, this.tvComp.groups$);
-        
+
         // for each control, push the validation message and an error
         if (this.tvComp.fg.controls[controlName]) {
           this.tvComp.fg.controls[controlName].setErrors(message.ValidationMessage, {});

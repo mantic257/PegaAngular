@@ -9,8 +9,10 @@ import { OpenNewCaseService } from '../_messages/opennewcase.service';
 import { GetNewCaseService } from '../_messages/getnewcase.service';
 import { RenameTabService } from '../_messages/renametab.service';
 import { OpenRecentService } from '../_messages/openrecent.service';
+import { ReviewCaseService } from '../_messages/review-case-service.service';
 import { GetRecentService } from "../_messages/getrecent.service";
 import { ProgressSpinnerService } from "../_messages/progressspinner.service";
+import { OpenReviewCaseService } from '../_messages/open-review-case.service';
 
 @Component({
   selector: 'app-maintabs',
@@ -19,10 +21,10 @@ import { ProgressSpinnerService } from "../_messages/progressspinner.service";
 })
 
 
-// 
+//
 // app-maintabs component creates a new tab for most of the "open" messages
 // Typically a new tab is created, when the componet gets the message that the tab
-// has been created, this component will send the corresponding "get" message.  
+// has been created, this component will send the corresponding "get" message.
 // Usually the component inside the tab is an app-workitem, which will register for
 // the "get" message and populate itself appropriately
 //
@@ -47,23 +49,30 @@ export class MaintabsComponent implements OnInit {
   openRecentMessage: any;
   openRecentSubscription: Subscription;
 
-  constructor(private oaService: OpenAssignmentService, 
+  openReviewCaseMessage: any;
+  openReviewCaseSubscription: Subscription;
+
+  constructor(private oaService: OpenAssignmentService,
               private gaService: GetAssignmentService,
               private cwService: CloseWorkService,
               private oncService: OpenNewCaseService,
               private gncService: GetNewCaseService,
               private rtService: RenameTabService,
               private orService: OpenRecentService,
+              private reviewCaseService: ReviewCaseService,
+              private openReviewCaseService: OpenReviewCaseService,
               private grService: GetRecentService,
-              private psService: ProgressSpinnerService ) { 
+              private psService: ProgressSpinnerService ) {
 
-    this.subscription = this.oaService.getMessage().subscribe(message => { 
+    console.log("maintabs constructor called");
+
+    this.subscription = this.oaService.getMessage().subscribe(message => {
 
       this.message = message;
       this.addTab(message.caseID, message.assignment);
     });
 
-    this.closeWorkSubscription = this.cwService.getMessage().subscribe(message => { 
+    this.closeWorkSubscription = this.cwService.getMessage().subscribe(message => {
 
       this.closeWorkMessage = message;
       let tabIndex = this.tabs.indexOf(this.closeWorkMessage.workID);
@@ -96,6 +105,14 @@ export class MaintabsComponent implements OnInit {
       }
     );
 
+    this.openReviewCaseSubscription = this.openReviewCaseService.getMessage().subscribe(
+      message => {
+        this.openReviewCaseMessage = message;
+        console.log("Maintabs message", message);
+        this.addTab(message.caseName, null);
+      }
+    );
+
 
   }
 
@@ -108,6 +125,7 @@ export class MaintabsComponent implements OnInit {
 
   ngOnDestroy() {
     this.subscription.unsubscribe();
+    this.openReviewCaseSubscription.unsubscribe();
   }
 
   ngAfterViewChecked() {
@@ -119,7 +137,7 @@ export class MaintabsComponent implements OnInit {
 
       if (!this.isNewCase) {
         this.gaService.sendMessage(this.message.assignment.pxRefObjectInsName, this.message.assignment);
-        
+
         this.message = null;
       }
     }
@@ -135,6 +153,10 @@ export class MaintabsComponent implements OnInit {
         this.grService.sendMessage(this.openRecentMessage.caseID);
       }
     }
+
+    else if (this.openReviewCaseMessage) {
+        this.reviewCaseService.sendMessage(this.openReviewCaseMessage.caseID);
+    }
   }
 
   addTab( sTabName : string, assignment : Object) {
@@ -145,7 +167,7 @@ export class MaintabsComponent implements OnInit {
       let timer = interval(100).subscribe(() => {
         this.selected.setValue(this.tabs.length-1);timer.unsubscribe();
         });
-    
+
     }
     else {
       this.psService.sendMessage(false);
