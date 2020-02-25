@@ -100,6 +100,7 @@ export class MaintabsComponent implements OnInit {
     this.openRecentSubscription = this.orService.getMessage().subscribe(
       message => {
         this.openRecentMessage = message;
+        this.openReviewCaseMessage = null;
 
         this.addTab(message.caseName, null);
       }
@@ -108,10 +109,12 @@ export class MaintabsComponent implements OnInit {
     this.openReviewCaseSubscription = this.openReviewCaseService.getMessage().subscribe(
       message => {
         this.openReviewCaseMessage = message;
+        this.openRecentMessage = null;
         console.log("Maintabs message", message);
         this.addTab(message.caseName, null);
       }
     );
+
 
 
   }
@@ -125,7 +128,7 @@ export class MaintabsComponent implements OnInit {
 
   ngOnDestroy() {
     this.subscription.unsubscribe();
-    this.openReviewCaseSubscription.unsubscribe();
+    /*this.openReviewCaseSubscription.unsubscribe();*/
   }
 
   ngAfterViewChecked() {
@@ -155,6 +158,7 @@ export class MaintabsComponent implements OnInit {
     }
 
     else if (this.openReviewCaseMessage) {
+        console.log("Send message to Get Review Service", this.openReviewCaseMessage);
         this.reviewCaseService.sendMessage(this.openReviewCaseMessage.caseID);
     }
   }

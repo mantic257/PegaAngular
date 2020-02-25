@@ -222,6 +222,7 @@ export class WorkitemComponent implements OnInit {
     );
     this.reviewCaseSubscription = this.reviewcaseservice.getMessage().subscribe(
       message => {
+        console.log("reviewCaseSubscription", message.caseID);
         this.reviewCaseMessage = message;
 
         this.reviewCase(message.caseID);
