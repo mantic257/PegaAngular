@@ -12,7 +12,7 @@ import { interval } from "rxjs/internal/observable/interval";
 import { TopviewComponent } from '../_subcomponents/topview/topview.component';
 import { ReferenceHelper } from '../_helpers/reference-helper';
 import { PegaErrors } from '../_constants/PegaErrors';
-import { MatSnackBar } from '@angular/material';
+import { MatSnackBar, MatPaginator, MatSort, MatTableDataSource } from '@angular/material';
 import { GetActionsService } from '../_messages/getactions.service';
 import { RefreshWorkListService } from '../_messages/refreshworklist.service';
 import { RefreshCaseService } from '../_messages/refreshcase.service';
@@ -96,6 +96,12 @@ export class WorkitemComponent implements OnInit {
   currentCase$: Object;
   currentCaseLoaded$: boolean = false;
 
+  currentCaseAssignments$: MatTableDataSource<any>;
+  displayedColumns = ['AssignedTo', 'Name','pxUrgencyAssign'];
+  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(MatSort) sort: MatSort;
+
+
   localActions$: Array<any> = new Array();
   assignmentActions$: Array<any> = new Array();
 
@@ -166,8 +172,13 @@ export class WorkitemComponent implements OnInit {
     this.subscription = this.gaservice.getMessage().subscribe(message => {
       this.message = message;
       this.currentCaseName = this.message.caseID;
+      console.log("Get Assigment Message", this.message);
 
-      this.getAssignment(message.assignment.pzInsKey);
+      if (message.assignment.pzInsKey){
+        this.getAssignment(message.assignment.pzInsKey);
+      }else if(message.assignment.ID){
+        this.getAssignment(message.assignment.ID);
+      }
 
       this.handleUnsubscribe();
     });
@@ -986,11 +997,14 @@ export class WorkitemComponent implements OnInit {
       response => {
 
         this.currentCase$ = response.body;
+        console.log("Retrieved Case", this.currentCase$);
 
 
           this.currentCaseID$ = this.currentCase$["ID"];
+          this.currentCaseAssignments$ = this.currentCase$["assignments"];
 
           this.currentPageID$ = "Review";
+          this.currentCaseLoaded$ = true;
 
           this.psservice.sendMessage(false);
           this.isLoaded = true;
@@ -1161,6 +1175,13 @@ export class WorkitemComponent implements OnInit {
   }
 
 
+  openAssignment(row) {
+    console.log("WorkItem OpenAssignment", row);
+
+    this.psservice.sendMessage(true);
+    this.oaservice.sendMessage( this.currentCaseID$, row);
+
+  }
 
 
   refreshView(stateData: any, oAction: any) {
