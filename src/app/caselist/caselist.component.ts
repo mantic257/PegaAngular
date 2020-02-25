@@ -86,4 +86,8 @@ export class CaselistComponent implements OnInit {
     console.log("OpenCase Finished", row);
 
   }
+
+  refreshCases(){
+    this.getCaseList();
+  }
 }

@@ -1,4 +1,10 @@
 <div>
+    <div style="text-align:right">
+      <button class="goRight"  mat-raised-button color="primary"  (click)="this.refreshCases()">Refresh</button>
+    </div>
+
+
+
   <table mat-table [dataSource]="worklist$" matSort>
 
     <ng-container matColumnDef="ID">

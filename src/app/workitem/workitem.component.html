@@ -14,7 +14,7 @@
                   <mat-icon>work</mat-icon><label >Local Actions</label>
                 </span>
                 <mat-divider></mat-divider>
-                <button mat-menu-item (click)=refreshView()>Refresh</button>
+                <button mat-menu-item  *ngIf="!isPage" (click)=refreshView()>Refresh</button>
                 <button mat-menu-item *ngFor="let lAction of localActions$" (click)="handleLocalAction(lAction.ID)" >{{lAction.name}}</button>
                 <span *ngIf="assignmentActions$.length > 0">
                 <mat-divider></mat-divider>
