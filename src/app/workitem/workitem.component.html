@@ -53,11 +53,22 @@
     </div>
     <div *ngIf="isPage" >
       <div class="pega-workitem-main" *ngIf="!isNewPage">
+
+
+
+
         <div class="pega-workitem-item" style="width: 100%" >
           <div style="padding: 5px;">
             <app-page *ngIf="isPage" [pageID]="currentPageID$" [caseID]="currentCaseID$" ></app-page>
-            </div>
-            <div>
+          </div>
+          <div>
+
+
+                <div style="padding-left: 15px;text-align:left;">
+                  <h3>Open Assignments</h3>
+
+                </div>
+
               <table mat-table [dataSource]="currentCaseAssignments$" matSort>
                 <ng-container matColumnDef="AssignedTo">
                   <th mat-header-cell *matHeaderCellDef mat-sort-header>Assigned To</th>

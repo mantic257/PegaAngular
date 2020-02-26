@@ -5,7 +5,7 @@
 <div [ngSwitch]="fieldComp.control?.type" class="pega-form-left" *ngIf="fieldComp?.visible && fieldComp.control?.type!='pxIcon'">
   <app-textinput [fieldComp]="fieldComp" *ngSwitchCase="'pxTextInput'" [formGroup]="formGroup" [noLabel]=noLabel [CaseID]="CaseID" [RefType$]="RefType$"></app-textinput>
   <app-number [fieldComp]="fieldComp" *ngSwitchCase="'pxInteger'" [formGroup]="formGroup" [noLabel]=noLabel [CaseID]="CaseID" [RefType$]="RefType$"></app-number>
-  <app-textinput [fieldComp]="fieldComp" *ngSwitchCase="'pxPhone'" [formGroup]="formGroup" [noLabel]=noLabe [CaseID]="CaseID" [RefType$]="RefType$"></app-textinput>
+  <app-textinput [fieldComp]="fieldComp" *ngSwitchCase="'pxPhone'" [formGroup]="formGroup" [noLabel]=noLabel [CaseID]="CaseID" [RefType$]="RefType$"></app-textinput>
   <app-checkbox [fieldComp]="fieldComp"  *ngSwitchCase="'pxCheckbox'" [formGroup]="formGroup" [noLabel]="noLabel" [CaseID]="CaseID" [RefType$]="RefType$"></app-checkbox>
   <app-email [fieldComp]="fieldComp"  *ngSwitchCase="'pxEmail'" [formGroup]="formGroup" [noLabel]=noLabel [CaseID]="CaseID" [RefType$]="RefType$"></app-email>
   <app-unitdays [fieldComp]="fieldComp" *ngSwitchCase="'UnitDays'" [formGroup]="formGroup" [noLabel]="noLabel" [CaseID]="CaseID" [RefType$]="RefType$"></app-unitdays>
@@ -26,4 +26,3 @@
 
 
 
-  
